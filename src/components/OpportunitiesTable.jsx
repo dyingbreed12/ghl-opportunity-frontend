@@ -14,20 +14,27 @@ function OpportunitiesTable({ data }) {
       {
         Header: 'Asking Price',
         accessor: 'AskingPrice',
-        Cell: ({ value }) => formatCurrency(value),
+        //Cell: ({ value }) => formatCurrency(value),
+        Cell: ({ value }) => value,
       },
       {
         Header: 'Assignment Fee',
         accessor: 'AssignmentFee',
-        Cell: ({ value }) => formatCurrency(value),
+        //Cell: ({ value }) => formatCurrency(value),
+        Cell: ({ value }) => value,
       },
       {
         Header: 'Contracted Price',
         accessor: 'ContractedPrice',
-        Cell: ({ value }) => formatCurrency(value),
+        //Cell: ({ value }) => formatCurrency(value),
+        Cell: ({ value }) => value,
       },
       { Header: 'Compensation Type', accessor: 'CompensationType' },
-      { Header: 'JV Share', accessor: 'JVShare' },
+     {
+        Header: 'JV Share',
+        accessor: 'JVShare',
+        Cell: ({ value }) => (value !== null && value !== undefined && value !== '' ? `${value}%` : ''),
+      },
       {
         Header: 'Option Period Expiration',
         accessor: 'OptionPeriodExpiration',

@@ -1,23 +1,45 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from 'react';
 
 function App() {
+  const [items, setItems] = useState([]);
+  const [name, setName] = useState('');
+
+  const fetchItems = async () => {
+    const res = await fetch('http://localhost:5000/api/items');
+    const data = await res.json();
+    setItems(data);
+  };
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const addItem = async () => {
+    if (!name) return alert('Enter a name');
+    await fetch('http://localhost:5000/api/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    setName('');
+    fetchItems();
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ maxWidth: 400, margin: 'auto', padding: 20 }}>
+      <h1>Items</h1>
+      <input
+        type="text"
+        placeholder="New item name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <button onClick={addItem}>Add</button>
+      <ul>
+        {items.map((item) => (
+          <li key={item.id}>{item.name}</li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -4,8 +4,10 @@ function App() {
   const [items, setItems] = useState([]);
   const [name, setName] = useState('');
 
+  const API_URL = 'https://ghl-opportunity-dashboard.onrender.com';
+  // const API_URL = 'http://localhost:5000';
   const fetchItems = async () => {
-    const res = await fetch('http://localhost:5000/api/items');
+    const res = await fetch(`${API_URL}/api/items`);
     const data = await res.json();
     setItems(data);
   };
@@ -16,7 +18,7 @@ function App() {
 
   const addItem = async () => {
     if (!name) return alert('Enter a name');
-    await fetch('http://localhost:5000/api/items', {
+    await fetch(`${API_URL}/api/items`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),

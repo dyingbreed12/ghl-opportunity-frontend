@@ -2,8 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { useTable, useSortBy, usePagination } from 'react-table';
 
 // Helper to format currency
-const formatCurrency = (num) =>
-  typeof num === 'number' ? num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2, style: 'currency', currency: 'USD' }) : '-';
+// const formatCurrency = (num) =>
+//   typeof num === 'number' ? num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2, style: 'currency', currency: 'USD' }) : '-';
 
 function OpportunitiesTable({ data }) {
   const columns = useMemo(

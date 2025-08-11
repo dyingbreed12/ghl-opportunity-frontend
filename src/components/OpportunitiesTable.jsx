@@ -24,20 +24,52 @@ export default function OpportunitiesTable() {
   const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
+
+  // Read admin param to control blur button visibility and blur default state
+  const [isAdmin, setIsAdmin] = useState(false);
   const [assignmentFeeBlurred, setAssignmentFeeBlurred] = useState(true);
 
   // Filters state
   const [propertyTypeFilter, setPropertyTypeFilter] = useState('');
   const [dealTypeFilter, setDealTypeFilter] = useState('');
 
-  // Columns definition
+  useEffect(() => {
+    // Parse query params
+    const params = new URLSearchParams(window.location.search);
+    const adminParam = params.get('admin');
+    const adminValue = adminParam === 'true';
+    setIsAdmin(adminValue);
+
+    // Blur Assignment Fee by default if not admin
+    setAssignmentFeeBlurred(!adminValue);
+
+    axios
+      .get('http://localhost:5000/api/opportunities')
+      .then((res) => {
+        setRows(res.data.map((row) => ({ ...row, id: row.Id })));
+      })
+      .catch((err) => {
+        console.error('Error fetching opportunities:', err);
+      });
+
+    setColumnVisibilityModel({
+      LockboxCode: false,
+      ShowingTime: false,
+      Quality: false,
+      MarketingLink: false,
+      PicturesLink: false,
+      Wholesaler: false,
+      Notes: false,
+    });
+  }, []);
+
   const columns = [
     { field: 'PropertyAddress', headerName: 'Property Address', width: 250 },
     {
       field: 'PropertyType',
       headerName: 'Property Type',
       width: 150,
-      filterable: false, // We'll handle filtering ourselves
+      filterable: false,
     },
     {
       field: 'DealType',
@@ -100,7 +132,6 @@ export default function OpportunitiesTable() {
     },
   ];
 
-  // Hidden columns to show in modal dialog
   const hiddenColumns = [
     { label: 'Lockbox Code', field: 'LockboxCode' },
     { label: 'Showing Time', field: 'ShowingTime' },
@@ -111,29 +142,7 @@ export default function OpportunitiesTable() {
     { label: 'Notes', field: 'Notes' },
   ];
 
-  // Fetch rows and initialize hidden columns
-  useEffect(() => {
-    axios
-      .get('http://localhost:5000/api/opportunities')
-      .then((res) => {
-        setRows(res.data.map((row) => ({ ...row, id: row.Id })));
-      })
-      .catch((err) => {
-        console.error('Error fetching opportunities:', err);
-      });
-
-    setColumnVisibilityModel({
-      LockboxCode: false,
-      ShowingTime: false,
-      Quality: false,
-      MarketingLink: false,
-      PicturesLink: false,
-      Wholesaler: false,
-      Notes: false,
-    });
-  }, []);
-
-  // Filter rows based on PropertyType and DealType filters
+  // Apply filters
   const filteredRows = rows.filter((row) => {
     return (
       (propertyTypeFilter === '' || row.PropertyType === propertyTypeFilter) &&
@@ -141,13 +150,12 @@ export default function OpportunitiesTable() {
     );
   });
 
-  // Get unique values for filters
+  // Get unique filter options
   const uniquePropertyTypes = Array.from(new Set(rows.map((r) => r.PropertyType))).filter(Boolean);
   const uniqueDealTypes = Array.from(new Set(rows.map((r) => r.DealType))).filter(Boolean);
 
   return (
     <>
-      {/* Filters and Blur toggle */}
       <Box
         sx={{
           mb: 2,
@@ -190,13 +198,15 @@ export default function OpportunitiesTable() {
           </Select>
         </FormControl>
 
-        <Button
-          variant="contained"
-          onClick={() => setAssignmentFeeBlurred((prev) => !prev)}
-          sx={{ ml: 'auto' }}
-        >
-          {assignmentFeeBlurred ? 'Show Assignment Fee' : 'Blur Assignment Fee'}
-        </Button>
+        {isAdmin && (
+          <Button
+            variant="contained"
+            onClick={() => setAssignmentFeeBlurred((prev) => !prev)}
+            sx={{ ml: 'auto' }}
+          >
+            {assignmentFeeBlurred ? 'Show Assignment Fee' : 'Blur Assignment Fee'}
+          </Button>
+        )}
       </Box>
 
       <div style={{ height: 600, width: '100%' }}>
@@ -208,7 +218,6 @@ export default function OpportunitiesTable() {
           components={{ Toolbar: GridToolbar }}
           pageSizeOptions={[5, 10, 20]}
           pagination
-          autoHeight={false}
           sx={{
             '& .MuiDataGrid-cell': {
               whiteSpace: 'normal !important',
@@ -226,7 +235,6 @@ export default function OpportunitiesTable() {
         />
       </div>
 
-      {/* Modal for hidden columns */}
       <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Opportunity Details</DialogTitle>
         <DialogContent dividers>

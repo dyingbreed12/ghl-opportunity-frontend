@@ -118,16 +118,18 @@ export default function OpportunitiesTable() {
       sortable: false,
       filterable: false,
       renderCell: (params) => (
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setModalData(params.row);
-            setModalOpen(true);
-          }}
-        >
-          More
-        </Button>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              setModalData(params.row);
+              setModalOpen(true);
+            }}
+          >
+            More
+          </Button>
+        </div>
       ),
     },
   ];

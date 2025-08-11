@@ -3,7 +3,8 @@ import OpportunitiesTable from './components/OpportunitiesTable';
 import './App.css';
 import { io } from 'socket.io-client';
 
-const API_URL = 'http://localhost:5000';  // Adjust if needed
+//const API_URL = 'http://localhost:5000';  // Adjust if needed
+const API_URL = 'https://ghl-opportunity-dashboard.onrender.com';  // Adjust if needed
 
 // const sampleData = [
 //   {
@@ -82,7 +83,7 @@ const fetchOpportunities = () => {
       setLoading(false);
     });
   };
-  
+
   useEffect(() => {
     fetchOpportunities();
 

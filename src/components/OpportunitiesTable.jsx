@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import axios from 'axios';
 import {
   Dialog,
   DialogTitle,
@@ -17,41 +16,40 @@ import {
   Select,
   MenuItem,
   Box,
+  CircularProgress,
 } from '@mui/material';
 
-export default function OpportunitiesTable() {
+export default function OpportunitiesTable({ data }) {
   const [rows, setRows] = useState([]);
-  const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalData, setModalData] = useState(null);
-
-  // Read admin param to control blur button visibility and blur default state
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [assignmentFeeBlurred, setAssignmentFeeBlurred] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
 
-  // Filters state
   const [propertyTypeFilter, setPropertyTypeFilter] = useState('');
   const [dealTypeFilter, setDealTypeFilter] = useState('');
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalData, setModalData] = useState(null);
+
   useEffect(() => {
-    // Parse query params
+    if (!data) {
+      setLoading(true);
+      setError(null);
+      setRows([]);
+      return;
+    }
+
+    setRows(data.map((row) => ({ ...row, id: row.Id })));
+    setLoading(false);
+    setError(null);
+
     const params = new URLSearchParams(window.location.search);
     const adminParam = params.get('admin');
     const adminValue = adminParam === 'true';
     setIsAdmin(adminValue);
-
-    // Blur Assignment Fee by default if not admin
     setAssignmentFeeBlurred(!adminValue);
-
-    axios
-      //.get('http://localhost:5000/api/opportunities')
-      .get('https://ghl-opportunity-dashboard.onrender.com/api/opportunities')
-      .then((res) => {
-        setRows(res.data.map((row) => ({ ...row, id: row.Id })));
-      })
-      .catch((err) => {
-        console.error('Error fetching opportunities:', err);
-      });
 
     setColumnVisibilityModel({
       LockboxCode: false,
@@ -62,22 +60,12 @@ export default function OpportunitiesTable() {
       Wholesaler: false,
       Notes: false,
     });
-  }, []);
+  }, [data]);
 
   const columns = [
     { field: 'PropertyAddress', headerName: 'Property Address', width: 250 },
-    {
-      field: 'PropertyType',
-      headerName: 'Property Type',
-      width: 150,
-      filterable: false,
-    },
-    {
-      field: 'DealType',
-      headerName: 'Deal Type',
-      width: 120,
-      filterable: false,
-    },
+    { field: 'PropertyType', headerName: 'Property Type', width: 150, filterable: false },
+    { field: 'DealType', headerName: 'Deal Type', width: 120, filterable: false },
     { field: 'AskingPrice', headerName: 'Asking Price', width: 150 },
     {
       field: 'AssignmentFee',
@@ -101,17 +89,17 @@ export default function OpportunitiesTable() {
       field: 'OptionPeriodExpiration',
       headerName: 'Option Period Expiration',
       width: 200,
-      renderCell: (params) => (params.value ? new Date(params.value).toISOString().slice(0, 10) : ''),
+      renderCell: (params) =>
+        params.value ? new Date(params.value).toISOString().slice(0, 10) : '',
     },
     {
       field: 'ClosingDate',
       headerName: 'Closing Date',
       width: 150,
-      renderCell: (params) => (params.value ? new Date(params.value).toISOString().slice(0, 10) : ''),
+      renderCell: (params) =>
+        params.value ? new Date(params.value).toISOString().slice(0, 10) : '',
     },
     { field: 'Access', headerName: 'Access', width: 150 },
-
-    // Button to open modal for hidden columns
     {
       field: 'details',
       headerName: 'Details',
@@ -119,8 +107,17 @@ export default function OpportunitiesTable() {
       sortable: false,
       filterable: false,
       renderCell: (params) => (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+            height: '100%',
+          }}
+        >
           <Button
+            type="button"
             variant="outlined"
             size="small"
             onClick={() => {
@@ -145,17 +142,37 @@ export default function OpportunitiesTable() {
     { label: 'Notes', field: 'Notes' },
   ];
 
-  // Apply filters
-  const filteredRows = rows.filter((row) => {
-    return (
+  const filteredRows = rows.filter(
+    (row) =>
       (propertyTypeFilter === '' || row.PropertyType === propertyTypeFilter) &&
       (dealTypeFilter === '' || row.DealType === dealTypeFilter)
-    );
-  });
+  );
 
-  // Get unique filter options
   const uniquePropertyTypes = Array.from(new Set(rows.map((r) => r.PropertyType))).filter(Boolean);
   const uniqueDealTypes = Array.from(new Set(rows.map((r) => r.DealType))).filter(Boolean);
+
+  if (loading)
+    return (
+      <Box
+        sx={{
+          height: 600,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          fontFamily: 'Arial, sans-serif',
+          backgroundColor: '#F5F5F5',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+
+  if (error)
+    return (
+      <div style={{ padding: 20, fontFamily: 'Arial, sans-serif', color: 'red' }}>
+        Error: {error}
+      </div>
+    );
 
   return (
     <>
@@ -167,6 +184,9 @@ export default function OpportunitiesTable() {
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'flex-start',
+          backgroundColor: '#F5F5F5',
+          padding: 1,
+          borderRadius: 1,
         }}
       >
         <FormControl sx={{ minWidth: 180 }}>
@@ -203,6 +223,7 @@ export default function OpportunitiesTable() {
 
         {isAdmin && (
           <Button
+            type="button"
             variant="contained"
             onClick={() => setAssignmentFeeBlurred((prev) => !prev)}
             sx={{ ml: 'auto' }}
@@ -212,16 +233,20 @@ export default function OpportunitiesTable() {
         )}
       </Box>
 
-      <div style={{ height: 600, width: '100%' }}>
+      <div style={{ height: 600, width: '100%', backgroundColor: '#F5F5F5' }}>
         <DataGrid
           rows={filteredRows}
           columns={columns}
           columnVisibilityModel={columnVisibilityModel}
-          onColumnVisibilityModelChange={(newModel) => setColumnVisibilityModel(newModel)}
+          onColumnVisibilityModelChange={setColumnVisibilityModel}
           components={{ Toolbar: GridToolbar }}
           pageSizeOptions={[5, 10, 20]}
           pagination
           sx={{
+            backgroundColor: '#F5F5F5',
+            '& .MuiDataGrid-row:nth-of-type(odd)': {
+              backgroundColor: '#e0e0e0',
+            },
             '& .MuiDataGrid-cell': {
               whiteSpace: 'normal !important',
               overflow: 'visible !important',
@@ -265,7 +290,9 @@ export default function OpportunitiesTable() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setModalOpen(false)}>Close</Button>
+          <Button type="button" onClick={() => setModalOpen(false)}>
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
     </>

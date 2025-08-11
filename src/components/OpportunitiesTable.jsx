@@ -1,241 +1,262 @@
-import React, { useMemo, useState } from 'react';
-import { useTable, useSortBy, usePagination } from 'react-table';
+import React, { useState, useEffect } from 'react';
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import axios from 'axios';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
+  Link,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+} from '@mui/material';
 
-// Helper to format currency
-// const formatCurrency = (num) =>
-//   typeof num === 'number' ? num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2, style: 'currency', currency: 'USD' }) : '-';
+export default function OpportunitiesTable() {
+  const [rows, setRows] = useState([]);
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalData, setModalData] = useState(null);
+  const [assignmentFeeBlurred, setAssignmentFeeBlurred] = useState(true);
 
-function OpportunitiesTable({ data }) {
-  const columns = useMemo(
-    () => [
-      { Header: 'Property Address', accessor: 'PropertyAddress' },
-      { Header: 'Property Type', accessor: 'PropertyType' },
-      { Header: 'Deal Type', accessor: 'DealType' },
-      {
-        Header: 'Asking Price',
-        accessor: 'AskingPrice',
-        //Cell: ({ value }) => formatCurrency(value),
-        Cell: ({ value }) => value,
-      },
-      {
-        Header: 'Assignment Fee',
-        accessor: 'AssignmentFee',
-        //Cell: ({ value }) => formatCurrency(value),
-        Cell: ({ value }) => value,
-      },
-      {
-        Header: 'Contracted Price',
-        accessor: 'ContractedPrice',
-        //Cell: ({ value }) => formatCurrency(value),
-        Cell: ({ value }) => value,
-      },
-      { Header: 'Compensation Type', accessor: 'CompensationType' },
-     {
-        Header: 'JV Share',
-        accessor: 'JVShare',
-        Cell: ({ value }) => (value !== null && value !== undefined && value !== '' ? `${value}%` : ''),
-      },
-      {
-        Header: 'Option Period Expiration',
-        accessor: 'OptionPeriodExpiration',
-        Cell: ({ value }) => (value ? new Date(value).toISOString().substring(0, 10) : ''),
-      },
-      {
-        Header: 'Closing Date',
-        accessor: 'ClosingDate',
-        Cell: ({ value }) => (value ? new Date(value).toISOString().substring(0, 10) : ''),
-      },
-      { Header: 'Access', accessor: 'Access' },
-      { Header: 'Lockbox Code', accessor: 'LockboxCode' },
-      { Header: 'Showing Time', accessor: 'ShowingTime' },
-      { Header: 'Quality', accessor: 'Quality' },
-      {
-        Header: 'Marketing Link',
-        accessor: 'MarketingLink',
-        Cell: ({ value }) =>
-          value ? (
-            <a href={value} target="_blank" rel="noreferrer" style={{ color: 'blue' }}>
-              Click Here
-            </a>
-          ) : (
-            ''
-          ),
-      },
-      {
-        Header: 'Pictures Link',
-        accessor: 'PicturesLink',
-        Cell: ({ value }) =>
-          value ? (
-            <a href={value} target="_blank" rel="noreferrer" style={{ color: 'blue' }}>
-              Click Here
-            </a>
-          ) : (
-            ''
-          ),
-      },
-      { Header: 'Wholesaler', accessor: 'Wholesaler' },
-      { Header: 'Notes', accessor: 'Notes' },
-    ],
-    []
-  );
+  // Filters state
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState('');
+  const [dealTypeFilter, setDealTypeFilter] = useState('');
 
-  const [pageSize, setPageSize] = useState(10);
-
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    page,
-    prepareRow,
-    canPreviousPage,
-    canNextPage,
-    pageOptions,
-    pageCount,
-    gotoPage,
-    nextPage,
-    previousPage,
-    setPageSize: setPageSizeRT,
-    state: { pageIndex },
-  } = useTable(
+  // Columns definition
+  const columns = [
+    { field: 'PropertyAddress', headerName: 'Property Address', width: 250 },
     {
-      columns,
-      data: useMemo(() => data ?? [], [data]),
-      initialState: { pageIndex: 0, pageSize },
-      getRowId: (row, relativeIndex) => (row.Id != null ? row.Id.toString() : `row_${relativeIndex}`),
+      field: 'PropertyType',
+      headerName: 'Property Type',
+      width: 150,
+      filterable: false, // We'll handle filtering ourselves
     },
-    useSortBy,
-    usePagination
-  );
+    {
+      field: 'DealType',
+      headerName: 'Deal Type',
+      width: 120,
+      filterable: false,
+    },
+    { field: 'AskingPrice', headerName: 'Asking Price', width: 150 },
+    {
+      field: 'AssignmentFee',
+      headerName: 'Assignment Fee',
+      width: 150,
+      renderCell: (params) => (
+        <span style={{ filter: assignmentFeeBlurred ? 'blur(5px)' : 'none' }}>
+          {params.value}
+        </span>
+      ),
+    },
+    { field: 'ContractedPrice', headerName: 'Contracted Price', width: 150 },
+    { field: 'CompensationType', headerName: 'Compensation Type', width: 180 },
+    {
+      field: 'JVShare',
+      headerName: 'JV Share',
+      width: 120,
+      renderCell: (params) => (params.value ? `${params.value}%` : ''),
+    },
+    {
+      field: 'OptionPeriodExpiration',
+      headerName: 'Option Period Expiration',
+      width: 200,
+      renderCell: (params) => (params.value ? new Date(params.value).toISOString().slice(0, 10) : ''),
+    },
+    {
+      field: 'ClosingDate',
+      headerName: 'Closing Date',
+      width: 150,
+      renderCell: (params) => (params.value ? new Date(params.value).toISOString().slice(0, 10) : ''),
+    },
+    { field: 'Access', headerName: 'Access', width: 150 },
 
-  const onPageSizeChange = (e) => {
-    const size = Number(e.target.value);
-    setPageSize(size);
-    setPageSizeRT(size);
-  };
+    // Button to open modal for hidden columns
+    {
+      field: 'details',
+      headerName: 'Details',
+      width: 100,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => {
+            setModalData(params.row);
+            setModalOpen(true);
+          }}
+        >
+          More
+        </Button>
+      ),
+    },
+  ];
+
+  // Hidden columns to show in modal dialog
+  const hiddenColumns = [
+    { label: 'Lockbox Code', field: 'LockboxCode' },
+    { label: 'Showing Time', field: 'ShowingTime' },
+    { label: 'Quality', field: 'Quality' },
+    { label: 'Marketing Link', field: 'MarketingLink', isLink: true },
+    { label: 'Pictures Link', field: 'PicturesLink', isLink: true },
+    { label: 'Wholesaler', field: 'Wholesaler' },
+    { label: 'Notes', field: 'Notes' },
+  ];
+
+  // Fetch rows and initialize hidden columns
+  useEffect(() => {
+    axios
+      .get('http://localhost:5000/api/opportunities')
+      .then((res) => {
+        setRows(res.data.map((row) => ({ ...row, id: row.Id })));
+      })
+      .catch((err) => {
+        console.error('Error fetching opportunities:', err);
+      });
+
+    setColumnVisibilityModel({
+      LockboxCode: false,
+      ShowingTime: false,
+      Quality: false,
+      MarketingLink: false,
+      PicturesLink: false,
+      Wholesaler: false,
+      Notes: false,
+    });
+  }, []);
+
+  // Filter rows based on PropertyType and DealType filters
+  const filteredRows = rows.filter((row) => {
+    return (
+      (propertyTypeFilter === '' || row.PropertyType === propertyTypeFilter) &&
+      (dealTypeFilter === '' || row.DealType === dealTypeFilter)
+    );
+  });
+
+  // Get unique values for filters
+  const uniquePropertyTypes = Array.from(new Set(rows.map((r) => r.PropertyType))).filter(Boolean);
+  const uniqueDealTypes = Array.from(new Set(rows.map((r) => r.DealType))).filter(Boolean);
 
   return (
     <>
-      <table {...getTableProps()} style={{ borderCollapse: 'collapse', width: '100%' }}>
-        <thead>
-          {headerGroups.map(headerGroup => {
-            const { key, ...restHeaderGroupProps } = headerGroup.getHeaderGroupProps();
-            return (
-              <tr key={key} {...restHeaderGroupProps}>
-                {headerGroup.headers.map(column => {
-                  const { key: key2, ...restColumnProps } = column.getHeaderProps(column.getSortByToggleProps());
-                  return (
-                    <th
-                      key={key2}
-                      {...restColumnProps}
-                      style={{
-                        borderBottom: '2px solid black',
-                        padding: '8px',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        backgroundColor: '#f0f0f0',
-                      }}
-                      title="Click to sort"
-                    >
-                      {column.render('Header')}
-                      <span>{column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ''}</span>
-                    </th>
-                  );
-                })}
-              </tr>
-            );
-          })}
-        </thead>
-
-        <tbody {...getTableBodyProps()}>
-          {page.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length} style={{ textAlign: 'center', padding: '20px' }}>
-                No opportunities found.
-              </td>
-            </tr>
-          ) : (
-            page.map(row => {
-              prepareRow(row);
-              const { key, ...restRowProps } = row.getRowProps();
-              return (
-                <tr key={key} {...restRowProps}>
-                  {row.cells.map(cell => {
-                    const { key: cellKey, ...restCellProps } = cell.getCellProps();
-                    return (
-                      <td
-                        key={cellKey}
-                        {...restCellProps}
-                        title={
-                          typeof cell.value === 'string' ? cell.value : JSON.stringify(cell.value)
-                        }
-                        style={{
-                          padding: '8px',
-                          maxWidth: '150px',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          cursor: 'default',
-                        }}
-                      >
-                        {cell.render('Cell')}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-
-      <div
-        style={{
-          marginTop: 10,
+      {/* Filters and Blur toggle */}
+      <Box
+        sx={{
+          mb: 2,
           display: 'flex',
-          justifyContent: 'space-between',
+          gap: 2,
+          flexWrap: 'wrap',
           alignItems: 'center',
-          fontFamily: 'Arial, sans-serif',
-          fontSize: '14px',
+          justifyContent: 'flex-start',
         }}
       >
-        <div>
-          Page{' '}
-          <strong>
-            {pageIndex + 1} of {pageOptions.length}
-          </strong>
-        </div>
+        <FormControl sx={{ minWidth: 180 }}>
+          <InputLabel>Property Type</InputLabel>
+          <Select
+            value={propertyTypeFilter}
+            label="Property Type"
+            onChange={(e) => setPropertyTypeFilter(e.target.value)}
+          >
+            <MenuItem value="">All</MenuItem>
+            {uniquePropertyTypes.map((type) => (
+              <MenuItem key={type} value={type}>
+                {type}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-        <div>
-          <button onClick={() => gotoPage(0)} disabled={!canPreviousPage} style={{ marginRight: 5 }}>
-            {'<<'}
-          </button>
-          <button onClick={() => previousPage()} disabled={!canPreviousPage} style={{ marginRight: 5 }}>
-            {'<'}
-          </button>
-          <button onClick={() => nextPage()} disabled={!canNextPage} style={{ marginRight: 5 }}>
-            {'>'}
-          </button>
-          <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
-            {'>>'}
-          </button>
-        </div>
+        <FormControl sx={{ minWidth: 180 }}>
+          <InputLabel>Deal Type</InputLabel>
+          <Select
+            value={dealTypeFilter}
+            label="Deal Type"
+            onChange={(e) => setDealTypeFilter(e.target.value)}
+          >
+            <MenuItem value="">All</MenuItem>
+            {uniqueDealTypes.map((type) => (
+              <MenuItem key={type} value={type}>
+                {type}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-        <div>
-          <label>
-            Rows per page:{' '}
-            <select value={pageSize} onChange={onPageSizeChange}>
-              {[5, 10, 20, 50].map(size => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <Button
+          variant="contained"
+          onClick={() => setAssignmentFeeBlurred((prev) => !prev)}
+          sx={{ ml: 'auto' }}
+        >
+          {assignmentFeeBlurred ? 'Show Assignment Fee' : 'Blur Assignment Fee'}
+        </Button>
+      </Box>
+
+      <div style={{ height: 600, width: '100%' }}>
+        <DataGrid
+          rows={filteredRows}
+          columns={columns}
+          columnVisibilityModel={columnVisibilityModel}
+          onColumnVisibilityModelChange={(newModel) => setColumnVisibilityModel(newModel)}
+          components={{ Toolbar: GridToolbar }}
+          pageSizeOptions={[5, 10, 20]}
+          pagination
+          autoHeight={false}
+          sx={{
+            '& .MuiDataGrid-cell': {
+              whiteSpace: 'normal !important',
+              overflow: 'visible !important',
+              textOverflow: 'unset !important',
+              lineHeight: '1.4rem',
+            },
+            '& .MuiDataGrid-columnHeaderTitle': {
+              whiteSpace: 'normal !important',
+              overflow: 'visible !important',
+              textOverflow: 'unset !important',
+              lineHeight: '1.4rem',
+            },
+          }}
+        />
       </div>
+
+      {/* Modal for hidden columns */}
+      <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Opportunity Details</DialogTitle>
+        <DialogContent dividers>
+          {modalData && (
+            <Table>
+              <TableBody>
+                {hiddenColumns.map(({ label, field, isLink }) => (
+                  <TableRow key={field}>
+                    <TableCell component="th" scope="row" sx={{ fontWeight: 'bold' }}>
+                      {label}
+                    </TableCell>
+                    <TableCell>
+                      {isLink && modalData[field] ? (
+                        <Link href={modalData[field]} target="_blank" rel="noopener">
+                          Click Here
+                        </Link>
+                      ) : (
+                        modalData[field] || '-'
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setModalOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
-
-export default OpportunitiesTable;

@@ -62,25 +62,27 @@ function App() {
 
   const socketRef = useRef(null);
 
-  const fetchOpportunities = () => {
-    setLoading(true);
-    fetch(`${API_URL}/api/opportunities`)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then(fetchedData => {
-        if (Array.isArray(fetchedData) && fetchedData.length > 0) {
-          setData(fetchedData);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
+const fetchOpportunities = () => {
+  setLoading(true);
+  fetch(`${API_URL}/api/opportunities`)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      return res.json();
+    })
+    .then(fetchedData => {
+      if (Array.isArray(fetchedData)) {
+        setData(fetchedData); // Always set the data
+      } else {
+        setData([]); // In case API doesn't return an array
+      }
+      setLoading(false);
+    })
+    .catch(err => {
+      setError(err.message);
+      setLoading(false);
+    });
   };
-
+  
   useEffect(() => {
     fetchOpportunities();
 

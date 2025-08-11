@@ -44,7 +44,8 @@ export default function OpportunitiesTable() {
     setAssignmentFeeBlurred(!adminValue);
 
     axios
-      .get('http://localhost:5000/api/opportunities')
+      //.get('http://localhost:5000/api/opportunities')
+      .get('https://ghl-opportunity-dashboard.onrender.com/api/opportunities')
       .then((res) => {
         setRows(res.data.map((row) => ({ ...row, id: row.Id })));
       })

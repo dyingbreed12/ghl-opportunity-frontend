@@ -6,8 +6,7 @@ import { io } from 'socket.io-client';
 const API_URL = 'https://ghl-opportunity-dashboard.onrender.com';
 
 function App() {
-  //const [opportunitiesData, setOpportunitiesData] = useState([]);
-  const [setOpportunitiesData] = useState([]);
+  const [opportunitiesData, setOpportunitiesData] = useState([]);
   const socketRef = useRef(null);
 
   const fetchOpportunities = () => {
@@ -48,9 +47,8 @@ function App() {
 
   return (
     <div>
-      <h1>Note: No Reply from Max After Deployment</h1>
-      {/* <h1 style={{ padding: 20, fontFamily: 'Arial, sans-serif' }}>Project Rootbeer Board</h1> */}
-      {/* <OpportunitiesTable data={opportunitiesData} /> */}
+      <h1 style={{ padding: 20, fontFamily: 'Arial, sans-serif' }}>Project Rootbeer Board</h1>
+      <OpportunitiesTable data={opportunitiesData} />
     </div>
   );
 }

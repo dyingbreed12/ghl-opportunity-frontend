@@ -6,7 +6,8 @@ import { io } from 'socket.io-client';
 const API_URL = 'https://ghl-opportunity-dashboard.onrender.com';
 
 function App() {
-  const [opportunitiesData, setOpportunitiesData] = useState([]);
+  //const [opportunitiesData, setOpportunitiesData] = useState([]);
+  const [setOpportunitiesData] = useState([]);
   const socketRef = useRef(null);
 
   const fetchOpportunities = () => {

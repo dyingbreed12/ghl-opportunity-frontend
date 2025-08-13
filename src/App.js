@@ -47,8 +47,9 @@ function App() {
 
   return (
     <div>
-      <h1 style={{ padding: 20, fontFamily: 'Arial, sans-serif' }}>Project Rootbeer Board</h1>
-      <OpportunitiesTable data={opportunitiesData} />
+      <h1>Note: No Reply from Max After Deployment</h1>
+      {/* <h1 style={{ padding: 20, fontFamily: 'Arial, sans-serif' }}>Project Rootbeer Board</h1> */}
+      {/* <OpportunitiesTable data={opportunitiesData} /> */}
     </div>
   );
 }

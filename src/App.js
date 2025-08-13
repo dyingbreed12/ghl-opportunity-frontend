@@ -1,54 +1,29 @@
-import React, { useEffect, useState, useRef } from 'react';
-import OpportunitiesTable from './components/OpportunitiesTable';
-import './App.css';
-import { io } from 'socket.io-client';
-
-const API_URL = 'https://ghl-opportunity-dashboard.onrender.com';
-
 function App() {
-  const [opportunitiesData, setOpportunitiesData] = useState([]);
-  const socketRef = useRef(null);
-
-  const fetchOpportunities = () => {
-    fetch(`${API_URL}/api/opportunities`)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then(fetchedData => {
-        if (Array.isArray(fetchedData)) {
-          setOpportunitiesData(fetchedData);
-        } else {
-          setOpportunitiesData([]);
-        }
-      })
-      .catch(err => {
-        // You can optionally log error here, but no UI handling
-        console.error('Fetch error:', err);
-        setOpportunitiesData([]);
-      });
+  const pageStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    backgroundColor: '#f5f5f5',
+    color: '#333',
+    fontFamily: 'Arial, sans-serif',
+    textAlign: 'center',
   };
 
-  useEffect(() => {
-    fetchOpportunities();
-
-    socketRef.current = io(API_URL);
-    socketRef.current.on('opportunitiesUpdated', () => {
-      console.log('Received opportunitiesUpdated event, refreshing data...');
-      fetchOpportunities();
-    });
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-    };
-  }, []);
+  const boxStyle = {
+    backgroundColor: '#fff',
+    padding: '2rem',
+    borderRadius: '12px',
+    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+  };
 
   return (
-    <div>
-      <h1 style={{ padding: 20, fontFamily: 'Arial, sans-serif' }}>Project Rootbeer Board</h1>
-      <OpportunitiesTable data={opportunitiesData} />
+    <div style={pageStyle}>
+      <div style={boxStyle}>
+        <h1>🚧 Service Suspended 🚧</h1>
+        <p>This site is temporarily unavailable. Please check back later.</p>
+      </div>
     </div>
   );
 }
